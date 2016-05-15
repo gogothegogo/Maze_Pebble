@@ -1,0 +1,122 @@
+{
+    "appKeys": {
+        "batteryIcon": 3,
+        "bluetoothAlarm": 2,
+        "colorDateBackground": 8,
+        "colorDateText": 9,
+        "colorTimeBackground": 6,
+        "colorTimeText": 7,
+        "croatianDate": 5,
+        "dateFormat": 4,
+        "dateSize": 1,
+        "timeSize": 0
+    },
+    "capabilities": [
+        "configurable"
+    ],
+    "companyName": "gogothegogo",
+    "enableMultiJS": true,
+    "longName": "Maze",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "images/9.png",
+                "name": "IMAGE_NUMBER_9",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/8.png",
+                "name": "IMAGE_NUMBER_8",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/7.png",
+                "name": "IMAGE_NUMBER_7",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/6.png",
+                "name": "IMAGE_NUMBER_6",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/5.png",
+                "name": "IMAGE_NUMBER_5",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/4.png",
+                "name": "IMAGE_NUMBER_4",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/3.png",
+                "name": "IMAGE_NUMBER_3",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/2.png",
+                "name": "IMAGE_NUMBER_2",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/1.png",
+                "name": "IMAGE_NUMBER_1",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/0.png",
+                "name": "IMAGE_NUMBER_0",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/background1.png",
+                "name": "IMAGE_BACKGROUND_1",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/background0.png",
+                "name": "IMAGE_BACKGROUND_0",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/icon.png",
+                "menuIcon": true,
+                "name": "IMAGE_ICON",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "characterRegex": "[ABCD]",
+                "file": "fonts/icons.ttf",
+                "name": "FONT_ICONS_16",
+                "targetPlatforms": null,
+                "type": "font"
+            }
+        ]
+    },
+    "sdkVersion": "3",
+    "shortName": "Maze",
+    "targetPlatforms": [
+        "aplite",
+        "basalt"
+    ],
+    "uuid": "4c77e24e-cef6-4874-9e94-7f0b7e5bbcc7",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": true
+    }
+}
