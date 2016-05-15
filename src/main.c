@@ -3,12 +3,14 @@
 
 static Window *s_main_window;
 static TextLayer *s_date_layer, *s_battery_icon_layer, *s_bluetooth_icon_layer;
-//static TextLayer *s_time_layer,*s_time_layer2, *s_date_layer, *s_battery_icon_layer, *s_bluetooth_icon_layer;
-static GFont s_time_font, s_icon_font;
+static GFont s_icon_font;
 static GColor color_background, color_time_text, color_time_textlayer, color_date_text, color_date_textlayer, color_date_background;
 static BitmapLayer *date_background_layer, *s_background_layer;
+static Layer *s_canvas_layer;
 static GBitmap *s_background_bitmap;
-static int time_position_offset_withdate = 0;
+static uint32_t s_numbers_bitmap[10];
+static GSize sprite_size_number;
+static GPoint number_point_UL, number_point_UR, number_point_DL, number_point_DR;
 static GAlign background_bitmap_alignment;
 static char *croMonths[12];
 static char *croDays[7];
@@ -62,22 +64,33 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   init();
 }
 
-static void update_time() {
+static void draw_number(GContext *ctx, GPoint origin, int number) {
+	// Create temporary GBitmap of digit we want to display
+	struct GBitmap *temp_bitmap = gbitmap_create_with_resource(s_numbers_bitmap[number]);
+
+	// Draw digit GBitmap to canvas
+	graphics_draw_bitmap_in_rect(ctx, temp_bitmap,
+		(GRect) {.origin = origin, .size = sprite_size_number});
+
+	// Destroy temporary GBitmap
+	gbitmap_destroy(temp_bitmap);
+}
+
+static void canvas_update_proc(Layer *layer, GContext *ctx) {
   // Get a tm structure
   time_t temp = time(NULL); 
   struct tm *tick_time = localtime(&temp);
-
-  // Write the current hours and minutes into a buffer
-  static char s_buffer[8];
-  static char s_buffer2[8];
-  //strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ? "%H:%M" : "%I:%M", tick_time);
-  // Display this time on the TextLayer
-  //text_layer_set_text(s_time_layer, s_buffer+(('0' == s_buffer[0])?1:0));
-  
-  strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ? "%H" : "%I", tick_time);
-  //text_layer_set_text(s_time_layer, s_buffer);
-  strftime(s_buffer2, sizeof(s_buffer2), "%M", tick_time);
-  //text_layer_set_text(s_time_layer2, s_buffer2);
+  int hour = tick_time->tm_hour;
+	int min = tick_time->tm_min;
+  // Convert hours to 12 hours if the user prefers
+	if (clock_is_24h_style() == false && hour > 12) {
+		hour -= 12;
+	}
+  APP_LOG(APP_LOG_LEVEL_INFO, "canvas update proc, time is: %d : %d", hour, min);
+  draw_number(ctx, number_point_UL, (int) (hour / 10));
+  draw_number(ctx, number_point_UR, (int) (hour % 10));
+  draw_number(ctx, number_point_DL, (int) (min / 10));
+  draw_number(ctx, number_point_DR, (int) (min % 10));
   
  if (settings[AppKeyDateSize]>0) {
   // Copy date into buffer from tm structure
@@ -104,7 +117,7 @@ static void update_time() {
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
-  update_time();
+  layer_mark_dirty(window_get_root_layer(s_main_window));
 }
 
 //  if (settings[AppKeyBluetoothAlarm]>0) {
@@ -162,44 +175,11 @@ static void main_window_load(Window *window) {
     bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
     layer_add_child(window_layer, bitmap_layer_get_layer(s_background_layer));
     
-  
-  /*
-  // Create time TextLayer with specific bounds
-    if (settings[AppKeyTimeSize]==1) {
-      s_time_layer2 = text_layer_create(GRect(0, 57, bounds.size.w, 64));
-      s_time_layer = text_layer_create(GRect(0, 10, bounds.size.w, 64));
-      s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_CHUBBY_64));
-  } else if (settings[AppKeyTimeSize]==2) {
-      s_time_layer2 = text_layer_create(GRect(0, 60, bounds.size.w, 90));
-      s_time_layer = text_layer_create(GRect(0, 0, bounds.size.w, 90));
-      s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SQUAREA_92));
-  } else if (settings[AppKeyTimeSize]==3) {
-      s_time_layer2 = text_layer_create(GRect(0, 57, bounds.size.w, bounds.size.h));
-      s_time_layer = text_layer_create(GRect(0, 10, bounds.size.w, 100));
-      s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_SQUAREB_90));
-  } else if (settings[AppKeyTimeSize]==4) {
-      s_time_layer2 = text_layer_create(GRect(0, 57, bounds.size.w, 64));
-      s_time_layer = text_layer_create(GRect(0, 10, bounds.size.w, 64));
-      s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_CHUBBY_64));
-  } else { //timesize == 5
-      s_time_layer2 = text_layer_create(GRect(0, 57, bounds.size.w, 64));
-      s_time_layer = text_layer_create(GRect(0, 10, bounds.size.w, 64));
-      s_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_CHUBBY_64));
-  } 
-  
-  text_layer_set_font(s_time_layer2, s_time_font);
-  text_layer_set_font(s_time_layer, s_time_font);
-  text_layer_set_background_color(s_time_layer2, color_time_textlayer);
-  text_layer_set_background_color(s_time_layer, color_time_textlayer);
-  text_layer_set_text_color(s_time_layer2, color_time_text);
-  text_layer_set_text_color(s_time_layer, color_time_text);
-  //text_layer_set_text(s_time_layer, "22:48");
-  text_layer_set_text(s_time_layer2, "48");
-  text_layer_set_text(s_time_layer, "22");
-  text_layer_set_text_alignment(s_time_layer2, GTextAlignmentCenter);
-  text_layer_set_text_alignment(s_time_layer, GTextAlignmentCenter);
-  layer_add_child(window_layer, text_layer_get_layer(s_time_layer2));
-  layer_add_child(window_layer, text_layer_get_layer(s_time_layer)); */
+  // Create canvas layer and add to window
+	s_canvas_layer = layer_create(bounds);
+	layer_set_update_proc(s_canvas_layer, canvas_update_proc);
+	layer_add_child(window_layer, s_canvas_layer);
+
   
   if (settings[AppKeyDateSize]>0) {
     date_background_layer = bitmap_layer_create(GRect(0, 144, 144, 24));
@@ -263,19 +243,17 @@ static void main_window_unload(Window *window) {
   // Destroy TextLayers
 /*  text_layer_destroy(s_time_layer2);
   text_layer_destroy(s_time_layer); */
+  layer_destroy(s_canvas_layer);
   
   if (settings[AppKeyDateSize]>0) {
     text_layer_destroy(s_date_layer);
   }
   
-  // Unload GFont
-  fonts_unload_custom_font(s_time_font);
-/* destroy background image
+// destroy background image
     // Destroy GBitmap
     gbitmap_destroy(s_background_bitmap);
     //Destroy BitmapLayer
     bitmap_layer_destroy(s_background_layer);
-  */
 
   if (settings[AppKeyBluetoothAlarm]>0 || settings[AppKeyBatteryIcon] > 0) {
     fonts_unload_custom_font(s_icon_font);
@@ -296,26 +274,35 @@ static void init() {
   
   APP_LOG(APP_LOG_LEVEL_INFO, "entered init");
   settings_read();
-
-
-    //color_background=COLOR_FALLBACK(GColorFromHEX(settings[AppKeyColorTimeBackground]), GColorBlack);
-    //color_time_text=COLOR_FALLBACK(GColorFromHEX(settings[AppKeyColorTimeText]), GColorWhite);
-    //color_time_textlayer=GColorClear;
-    //color_date_text=COLOR_FALLBACK(GColorFromHEX(settings[AppKeyColorDateText]), GColorWhite);
-    //color_date_textlayer=COLOR_FALLBACK(GColorFromHEX(settings[AppKeyColorDateBackground]), GColorClear);
+  sprite_size_number=GSize(42, 54);
+  number_point_UL=GPoint(26, 26);
+  number_point_UR=GPoint(76, 26);
+  number_point_DL=GPoint(26, 88);
+  number_point_DR=GPoint(76, 88);
   
-    color_background=GColorFromHEX(settings[AppKeyColorTimeBackground]);
-    color_time_text=GColorFromHEX(settings[AppKeyColorTimeText]);
-    color_time_textlayer=GColorClear;
-    color_date_text=GColorFromHEX(settings[AppKeyColorDateText]);
-    color_date_textlayer=GColorClear;
-    color_date_background=GColorFromHEX(settings[AppKeyColorDateBackground]);
+  s_numbers_bitmap[0] = RESOURCE_ID_IMAGE_NUMBER_0;
+  s_numbers_bitmap[1] = RESOURCE_ID_IMAGE_NUMBER_1;
+  s_numbers_bitmap[2] = RESOURCE_ID_IMAGE_NUMBER_2;
+  s_numbers_bitmap[3] = RESOURCE_ID_IMAGE_NUMBER_3;
+  s_numbers_bitmap[4] = RESOURCE_ID_IMAGE_NUMBER_4;
+  s_numbers_bitmap[5] = RESOURCE_ID_IMAGE_NUMBER_5;
+  s_numbers_bitmap[6] = RESOURCE_ID_IMAGE_NUMBER_6;
+  s_numbers_bitmap[7] = RESOURCE_ID_IMAGE_NUMBER_7;
+  s_numbers_bitmap[8] = RESOURCE_ID_IMAGE_NUMBER_8;
+  s_numbers_bitmap[9] = RESOURCE_ID_IMAGE_NUMBER_9;
+  
+  color_background=GColorFromHEX(settings[AppKeyColorTimeBackground]);
+  color_time_text=GColorFromHEX(settings[AppKeyColorTimeText]);
+  color_time_textlayer=GColorClear;
+  color_date_text=GColorFromHEX(settings[AppKeyColorDateText]);
+  color_date_textlayer=GColorClear;
+  color_date_background=GColorFromHEX(settings[AppKeyColorDateBackground]);
   
   if (settings[AppKeyDateSize]>0) {
-    time_position_offset_withdate=9;
+    //time_position_offset_withdate=9;
     //background_bitmap_alignment=GAlignTop;
   } else {
-    time_position_offset_withdate=0;
+    //time_position_offset_withdate=0;
     //background_bitmap_alignment=GAlignCenter;
   }
   
@@ -336,7 +323,7 @@ static void init() {
 
 #if DEBUG == 0
   // Make sure the time is displayed from the start
-  update_time();
+  //update_time();
 
   // Register with TickTimerService
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);

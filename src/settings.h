@@ -3,7 +3,7 @@
 #define DEBUG 0
 #define COLOR_THEME 1 //0 debug mode text layer visible, 1 black with white text, 2 white with black text, 3 backgroung image
 #define TIME_SIZE 3 //1 tiny, 2 small, 3 medium, 4 large, 5 huge
-#define DATE_SIZE 2 //0 no date, 1 small, 2 medium, 3 large
+#define DATE_SIZE 0 //0 no date, 1 small, 2 medium, 3 large
 #define BLUETOOTH_ALARM 2 //0 off, 1 icon, 2 icon+alarm
 #define BATTERY_ICON 1 //0 off, 1 10%, 2 20% & 10%
 #define DATE_FORMAT 1 //1 - 27 Apr, Wed, 2 - Apr 27, Wed, 3 - Wed, 27 Apr, 4 - Wed, Apr 27
