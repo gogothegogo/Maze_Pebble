@@ -2,11 +2,11 @@
 #include "settings.h"
 
 static Window *s_main_window;
-static TextLayer *s_date_layer, *s_battery_icon_layer, *s_bluetooth_icon_layer;
+static TextLayer *s_date_layer, *s_battery_icon_layer, *s_bluetooth_icon_layer, *s_shake_layer;
 static GFont s_icon_font;
 static GColor color_background, color_time_text, color_time_textlayer, color_date_text, color_date_textlayer, color_date_background;
 static BitmapLayer *date_background_layer, *s_background_layer;
-static Layer *s_canvas_layer;
+static BitmapLayer *s_canvas_layer;
 static GBitmap *s_background_bitmap;
 static uint32_t s_numbers_bitmap[10];
 static GSize sprite_size_number;
@@ -14,6 +14,8 @@ static GPoint number_point_UL, number_point_UR, number_point_DL, number_point_DR
 static GAlign background_bitmap_alignment;
 static char *croMonths[12];
 static char *croDays[7];
+AppTimer *timer;
+static int show_shake_delay = 6000;
 
 static void init();
 //static void deinit();
@@ -64,13 +66,17 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   init();
 }
 
+
 static void draw_number(GContext *ctx, GPoint origin, int number) {
+  graphics_context_set_compositing_mode(ctx, GCompOpSet);
 	// Create temporary GBitmap of digit we want to display
 	struct GBitmap *temp_bitmap = gbitmap_create_with_resource(s_numbers_bitmap[number]);
-
+#if defined(PBL_COLOR)
+  graphics_context_set_fill_color(ctx, color_time_text);
+  graphics_fill_rect(ctx, (GRect) {.origin = origin, .size = sprite_size_number}, 0, GCornerNone);
+#endif
 	// Draw digit GBitmap to canvas
-	graphics_draw_bitmap_in_rect(ctx, temp_bitmap,
-		(GRect) {.origin = origin, .size = sprite_size_number});
+	graphics_draw_bitmap_in_rect(ctx, temp_bitmap, (GRect) {.origin = origin, .size = sprite_size_number});
 
 	// Destroy temporary GBitmap
 	gbitmap_destroy(temp_bitmap);
@@ -86,7 +92,7 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
 	if (clock_is_24h_style() == false && hour > 12) {
 		hour -= 12;
 	}
-  APP_LOG(APP_LOG_LEVEL_INFO, "canvas update proc, time is: %d : %d", hour, min);
+  //APP_LOG(APP_LOG_LEVEL_INFO, "canvas update proc, time is: %d : %d", hour, min);
   draw_number(ctx, number_point_UL, (int) (hour / 10));
   draw_number(ctx, number_point_UR, (int) (hour % 10));
   draw_number(ctx, number_point_DL, (int) (min / 10));
@@ -156,6 +162,40 @@ static void battery_callback(BatteryChargeState state) {
   layer_set_hidden(text_layer_get_layer(s_battery_icon_layer), false);
 }
 
+
+void timer_callback(void *data) {
+  text_layer_destroy(s_shake_layer);
+  tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+}
+
+static void update_time_shake () {
+  time_t temp = time(NULL); 
+  struct tm *tick_time = localtime(&temp);
+  // Write the current hours and minutes into a buffer
+  static char s_buffer[26];
+  strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ? "%H:%M:%S\n\n%d %b\n%A" : "%I:%M:%S\n\n%d %b\n%A", tick_time);
+  // Display this time on the TextLayer
+  text_layer_set_text(s_shake_layer, s_buffer+(('0' == s_buffer[0])?1:0));
+}
+
+static void tick_handler_shake(struct tm *tick_time, TimeUnits units_changed) {
+  update_time_shake();
+}
+
+static void draw_shake_window (AccelAxisType axis, int32_t direction) {
+  s_shake_layer = text_layer_create(GRect(24, 24, 96, 120));
+  text_layer_set_background_color(s_shake_layer, GColorWhite);
+  text_layer_set_text_color(s_shake_layer, GColorBlack);
+  text_layer_set_text(s_shake_layer, "\n00:00");
+  text_layer_set_text_alignment(s_shake_layer, GTextAlignmentCenter);
+  text_layer_set_font(s_shake_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28));
+  layer_add_child(window_get_root_layer(s_main_window), text_layer_get_layer(s_shake_layer));
+  update_time_shake();
+  tick_timer_service_subscribe(SECOND_UNIT, tick_handler_shake);
+  timer = app_timer_register(show_shake_delay, (AppTimerCallback)timer_callback, NULL);
+}
+
+
 static void main_window_load(Window *window) {
   // Get information about the Window
   Layer *window_layer = window_get_root_layer(window);
@@ -167,18 +207,32 @@ static void main_window_load(Window *window) {
 
 // background image
     // Create GBitmap
-    s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_1);
+  if (settings[AppKeyTimeSize]>0) {
+    if (settings[AppKeyTimeSize]==2) {
+      s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_0);
+    } else if (settings[AppKeyTimeSize]==3) {
+      s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_3);
+    } else if (settings[AppKeyTimeSize]==4) {
+      s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_4);
+    } else if (settings[AppKeyTimeSize]==1) {
+      s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_1);
+    }
     //create bitmap layer
     s_background_layer = bitmap_layer_create(bounds);
     // Set the bitmap onto the layer and add to the window
     bitmap_layer_set_alignment(s_background_layer, background_bitmap_alignment);
+    bitmap_layer_set_compositing_mode(s_background_layer, GCompOpSet);
+    bitmap_layer_set_background_color(s_background_layer, color_time_textlayer);
     bitmap_layer_set_bitmap(s_background_layer, s_background_bitmap);
     layer_add_child(window_layer, bitmap_layer_get_layer(s_background_layer));
-    
-  // Create canvas layer and add to window
-	s_canvas_layer = layer_create(bounds);
-	layer_set_update_proc(s_canvas_layer, canvas_update_proc);
-	layer_add_child(window_layer, s_canvas_layer);
+  }
+  
+  // Create canvas layer and add to window 
+	s_canvas_layer = bitmap_layer_create(bounds);
+  //bitmap_layer_set_background_color(s_canvas_layer, color_time_text);
+  //bitmap_layer_set_compositing_mode(s_canvas_layer, GCompOpSet);
+	layer_set_update_proc(bitmap_layer_get_layer(s_canvas_layer), canvas_update_proc);
+	layer_add_child(window_layer, bitmap_layer_get_layer(s_canvas_layer));
 
   
   if (settings[AppKeyDateSize]>0) {
@@ -243,7 +297,8 @@ static void main_window_unload(Window *window) {
   // Destroy TextLayers
 /*  text_layer_destroy(s_time_layer2);
   text_layer_destroy(s_time_layer); */
-  layer_destroy(s_canvas_layer);
+  text_layer_destroy(s_shake_layer);
+  bitmap_layer_destroy(s_canvas_layer);
   
   if (settings[AppKeyDateSize]>0) {
     text_layer_destroy(s_date_layer);
@@ -343,10 +398,15 @@ static void init() {
   app_message_register_inbox_received(inbox_received_handler);
   //app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
   app_message_open(256, 256);
+  
+  accel_tap_service_subscribe(draw_shake_window);
 }
 
 static void deinit() {
   APP_LOG(APP_LOG_LEVEL_INFO, "entered deinit");
+  app_timer_cancel(timer);
+	accel_tap_service_unsubscribe();
+	tick_timer_service_unsubscribe();
   // Destroy Window
   window_destroy(s_main_window);
 }

@@ -21,6 +21,18 @@
     "resources": {
         "media": [
             {
+                "file": "images/background3.png",
+                "name": "IMAGE_BACKGROUND_4",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/background2.png",
+                "name": "IMAGE_BACKGROUND_3",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
                 "file": "images/9.png",
                 "name": "IMAGE_NUMBER_9",
                 "targetPlatforms": null,
