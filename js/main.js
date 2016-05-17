@@ -15,7 +15,7 @@ function submitHandler() {
 }
 
 function loadOptions() {
-  var $timeSize = $('#timeSize');
+  var $backgroundType = $('#backgroundType');
   var $dateSize = $('#dateSize');
   var $bluetoothAlarm = $('#bluetoothAlarm');
   var $batteryIcon = $('#batteryIcon');
@@ -27,7 +27,7 @@ function loadOptions() {
   var $colorDateText = $('#colorDateText');
 
   if (localStorage.colorTheme) {
-    $timeSize[0].value = localStorage.timeSize;
+    $backgroundType[0].value = localStorage.backgroundType;
     $dateSize[0].value = localStorage.dateSize;
     $bluetoothAlarm[0].value = localStorage.bluetoothAlarm;
     $batteryIcon[0].value = localStorage.batteryIcon;
@@ -41,7 +41,7 @@ function loadOptions() {
 }
 
 function getAndStoreConfigData() {
-  var $timeSize = $('#timeSize');
+  var $backgroundType = $('#backgroundType');
   var $dateSize = $('#dateSize');
   var $bluetoothAlarm = $('#bluetoothAlarm');
   var $batteryIcon = $('#batteryIcon');
@@ -53,7 +53,7 @@ function getAndStoreConfigData() {
   var $colorDateText = $('#colorDateText');
   
   var options = {
-    timeSize: $timeSize.val(),
+    backgroundType: $backgroundType.val(),
     dateSize: $dateSize.val(),
     bluetoothAlarm: $bluetoothAlarm.val(),
     batteryIcon: $batteryIcon.val(),
@@ -65,7 +65,7 @@ function getAndStoreConfigData() {
     colorDateText: $colorDateText.val()
   };
 
-  localStorage.timeSize = options.timeSize;
+  localStorage.backgroundType = options.backgroundType;
   localStorage.dateSize = options.dateSize;
   localStorage.bluetoothAlarm = options.bluetoothAlarm;
   localStorage.batteryIcon = options.batteryIcon;
@@ -99,77 +99,77 @@ $('.preset').click(function(e) {
   $('.preset').removeClass('current');
   $(this).addClass('current');
   if($currentId == "1a") {
-      $('#timeSize')[0].value=3;
+      $('#backgroundType')[0].value=3;
       $('#dateSize')[0].value=2;
       $('#colorTimeBackground')[0].value="0x000000";
       $('#colorTimeText')[0].value="0xFFFFFF";
       $('#colorDateBackground')[0].value="0x000000";
       $('#colorDateText')[0].value="0xFFFFFF";
     } else if($currentId == "2a") {
-      $('#timeSize')[0].value=3;
+      $('#backgroundType')[0].value=3;
       $('#dateSize')[0].value=2;
       $('#colorTimeBackground')[0].value="0xFFFFFF";
       $('#colorTimeText')[0].value="0x000000";
       $('#colorDateBackground')[0].value="0x000000";
       $('#colorDateText')[0].value="0xFFFFFF";
     } else if($currentId == "3a") {
-      $('#timeSize')[0].value=5;
+      $('#backgroundType')[0].value=5;
       $('#dateSize')[0].value=0;
       $('#colorTimeBackground')[0].value="0xFFFFFF";
       $('#colorTimeText')[0].value="0x000000";
       $('#colorDateBackground')[0].value="0xFFFFFF";
       $('#colorDateText')[0].value="0x000000";
     } else if($currentId == "4a") {
-      $('#timeSize')[0].value=1;
+      $('#backgroundType')[0].value=1;
       $('#dateSize')[0].value=0;
       $('#colorTimeBackground')[0].value="0x000000";
       $('#colorTimeText')[0].value="0xFFFFFF";
       $('#colorDateBackground')[0].value="0x000000";
       $('#colorDateText')[0].value="0xFFFFFF";
     } else if($currentId == "5a") {
-      $('#timeSize')[0].value=1;
+      $('#backgroundType')[0].value=1;
       $('#dateSize')[0].value=1;
       $('#colorTimeBackground')[0].value="0xFFFFFF";
       $('#colorTimeText')[0].value="0x000000";
       $('#colorDateBackground')[0].value="0xFFFFFF";
       $('#colorDateText')[0].value="0x000000";
     } else if($currentId == "1b") {
-      $('#timeSize')[0].value=3;
+      $('#backgroundType')[0].value=3;
       $('#dateSize')[0].value=2;
       $('#colorTimeBackground')[0].value="0x000000";
       $('#colorTimeText')[0].value="0xFFFFFF";
       $('#colorDateBackground')[0].value="0x000000";
       $('#colorDateText')[0].value="0xFFFFFF";
     } else if($currentId == "2b") {
-      $('#timeSize')[0].value=3;
+      $('#backgroundType')[0].value=3;
       $('#dateSize')[0].value=2;
       $('#colorTimeBackground')[0].value="0xFFFFFF";
       $('#colorTimeText')[0].value="0x000055";
       $('#colorDateBackground')[0].value="0x000055";
       $('#colorDateText')[0].value="0xFFFFFF";
     } else if($currentId == "3b") {
-      $('#timeSize')[0].value=5;
+      $('#backgroundType')[0].value=5;
       $('#dateSize')[0].value=0;
       $('#colorTimeBackground')[0].value="0xFFFFFF";
       $('#colorTimeText')[0].value="0x00AAAA";
       $('#colorDateBackground')[0].value="0xFFFFFF";
       $('#colorDateText')[0].value="0x00AAAA";
     } else if($currentId == "4b") {
-      $('#timeSize')[0].value=5;
+      $('#backgroundType')[0].value=5;
       $('#dateSize')[0].value=0;
       $('#colorTimeBackground')[0].value="0x00AAAA";
       $('#colorTimeText')[0].value="0xFFFFFF";
       $('#colorDateBackground')[0].value="0x00AAAA";
       $('#colorDateText')[0].value="0xFFFFFF";
     } else if($currentId == "5b") {
-      $('#timeSize')[0].value=1;
+      $('#backgroundType')[0].value=1;
       $('#dateSize')[0].value=0;
       $('#colorTimeBackground')[0].value="0x000000";
       $('#colorTimeText')[0].value="0xFF0000";
       $('#colorDateBackground')[0].value="0x000000";
       $('#colorDateText')[0].value="0xFF0000";
     } else if($currentId == "6b") {
-      $('#timeSize')[0].value=5;
+      $('#backgroundType')[0].value=5;
       $('#dateSize')[0].value=2;
       $('#colorTimeBackground')[0].value="0x00AA55";
       $('#colorTimeText')[0].value="0xFF0000";
