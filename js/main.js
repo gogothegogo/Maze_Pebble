@@ -33,8 +33,8 @@ function loadOptions() {
     $batteryIcon[0].value = localStorage.batteryIcon;
     $dateFormat[0].value = localStorage.dateFormat;
     $croatianDate[0].checked = localStorage.croatianDate == 1;
-    $colorTimeBackground[0].value = localStorage.colorTimeBackground ? localStorage.colorTimeBackground : "0x000000";
-    $colorTimeText[0].value = localStorage.colorTimeText ? localStorage.colorTimeText : "0x000000";
+    $colorTimeBackground[0].value = localStorage.colorTimeBackground;
+    $colorTimeText[0].value = localStorage.colorTimeText;
     $colorDateBackground[0].value = localStorage.colorDateBackground;
     $colorDateText[0].value = localStorage.colorDateText;
   }
