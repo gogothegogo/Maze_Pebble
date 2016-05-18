@@ -23,8 +23,7 @@ function loadOptions() {
   var $croatianDate = $('#croatianDate');
   var $colorTimeBackground = $('#colorTimeBackground');
   var $colorTimeText = $('#colorTimeText');
-  var $colorDateBackground = $('#colorDateBackground');
-  var $colorDateText = $('#colorDateText');
+  var $colorNotificationText = $('#colorNotificationText');
 
   if (localStorage.backgroundType) {
     $backgroundType[0].value = localStorage.backgroundType;
@@ -35,8 +34,7 @@ function loadOptions() {
     $croatianDate[0].checked = localStorage.croatianDate == 1;
     $colorTimeBackground[0].value = localStorage.colorTimeBackground;
     $colorTimeText[0].value = localStorage.colorTimeText;
-    $colorDateBackground[0].value = localStorage.colorDateBackground;
-    $colorDateText[0].value = localStorage.colorDateText;
+    $colorNotificationText[0].value = localStorage.colorNotificationText;
   }
 }
 
@@ -49,8 +47,7 @@ function getAndStoreConfigData() {
   var $croatianDate = $('#croatianDate');
   var $colorTimeBackground = $('#colorTimeBackground');
   var $colorTimeText = $('#colorTimeText');
-  var $colorDateBackground = $('#colorDateBackground');
-  var $colorDateText = $('#colorDateText');
+  var $colorNotificationText = $('#colorNotificationText');
   
   var options = {
     backgroundType: $backgroundType.val(),
@@ -61,8 +58,7 @@ function getAndStoreConfigData() {
     croatianDate: $croatianDate[0].checked ? 1:0,
     colorTimeBackground: $colorTimeBackground.val(),
     colorTimeText: $colorTimeText.val(),
-    colorDateBackground: $colorDateBackground.val(),
-    colorDateText: $colorDateText.val()
+    colorNotificationText: $colorNotificationText.val()
   };
 
   localStorage.backgroundType = options.backgroundType;
@@ -73,8 +69,7 @@ function getAndStoreConfigData() {
   localStorage.croatianDate = options.croatianDate;
   localStorage.colorTimeBackground = options.colorTimeBackground;
   localStorage.colorTimeText = options.colorTimeText;
-  localStorage.colorDateBackground = options.colorDateBackground;
-  localStorage.colorDateText = options.colorDateText;
+  localStorage.colorNotificationText = options.colorNotificationText;
 
   console.log('Got options: ' + JSON.stringify(options));
   return options;
@@ -103,78 +98,67 @@ $('.preset').click(function(e) {
       $('#dateSize')[0].value=2;
       $('#colorTimeBackground')[0].value="0x000000";
       $('#colorTimeText')[0].value="0xFFFFFF";
-      $('#colorDateBackground')[0].value="0x000000";
-      $('#colorDateText')[0].value="0xFFFFFF";
+      $('#colorNotificationText')[0].value="0xFFFFFF";
     } else if($currentId == "2a") {
       $('#backgroundType')[0].value=3;
       $('#dateSize')[0].value=2;
       $('#colorTimeBackground')[0].value="0xFFFFFF";
       $('#colorTimeText')[0].value="0x000000";
-      $('#colorDateBackground')[0].value="0x000000";
-      $('#colorDateText')[0].value="0xFFFFFF";
+      $('#colorNotificationText')[0].value="0xFFFFFF";
     } else if($currentId == "3a") {
       $('#backgroundType')[0].value=5;
       $('#dateSize')[0].value=0;
       $('#colorTimeBackground')[0].value="0xFFFFFF";
       $('#colorTimeText')[0].value="0x000000";
-      $('#colorDateBackground')[0].value="0xFFFFFF";
-      $('#colorDateText')[0].value="0x000000";
+      $('#colorNotificationText')[0].value="0x000000";
     } else if($currentId == "4a") {
       $('#backgroundType')[0].value=1;
       $('#dateSize')[0].value=0;
       $('#colorTimeBackground')[0].value="0x000000";
       $('#colorTimeText')[0].value="0xFFFFFF";
-      $('#colorDateBackground')[0].value="0x000000";
-      $('#colorDateText')[0].value="0xFFFFFF";
+      $('#colorNotificationText')[0].value="0xFFFFFF";
     } else if($currentId == "5a") {
       $('#backgroundType')[0].value=1;
       $('#dateSize')[0].value=1;
       $('#colorTimeBackground')[0].value="0xFFFFFF";
       $('#colorTimeText')[0].value="0x000000";
-      $('#colorDateBackground')[0].value="0xFFFFFF";
-      $('#colorDateText')[0].value="0x000000";
+      $('#colorNotificationText')[0].value="0x000000";
     } else if($currentId == "1b") {
       $('#backgroundType')[0].value=3;
       $('#dateSize')[0].value=2;
       $('#colorTimeBackground')[0].value="0x000000";
       $('#colorTimeText')[0].value="0xFFFFFF";
-      $('#colorDateBackground')[0].value="0x000000";
-      $('#colorDateText')[0].value="0xFFFFFF";
+      $('#colorNotificationText')[0].value="0xFFFFFF";
     } else if($currentId == "2b") {
       $('#backgroundType')[0].value=3;
       $('#dateSize')[0].value=2;
       $('#colorTimeBackground')[0].value="0xFFFFFF";
       $('#colorTimeText')[0].value="0x000055";
-      $('#colorDateBackground')[0].value="0x000055";
-      $('#colorDateText')[0].value="0xFFFFFF";
+      $('#colorNotificationText')[0].value="0xFFFFFF";
     } else if($currentId == "3b") {
       $('#backgroundType')[0].value=5;
       $('#dateSize')[0].value=0;
       $('#colorTimeBackground')[0].value="0xFFFFFF";
       $('#colorTimeText')[0].value="0x00AAAA";
-      $('#colorDateBackground')[0].value="0xFFFFFF";
-      $('#colorDateText')[0].value="0x00AAAA";
+      $('#colorNotificationText')[0].value="0x00AAAA";
     } else if($currentId == "4b") {
       $('#backgroundType')[0].value=5;
       $('#dateSize')[0].value=0;
       $('#colorTimeBackground')[0].value="0x00AAAA";
       $('#colorTimeText')[0].value="0xFFFFFF";
-      $('#colorDateBackground')[0].value="0x00AAAA";
-      $('#colorDateText')[0].value="0xFFFFFF";
+      $('#colorNotificationText')[0].value="0xFFFFFF";
     } else if($currentId == "5b") {
       $('#backgroundType')[0].value=1;
       $('#dateSize')[0].value=0;
       $('#colorTimeBackground')[0].value="0x000000";
       $('#colorTimeText')[0].value="0xFF0000";
-      $('#colorDateBackground')[0].value="0x000000";
-      $('#colorDateText')[0].value="0xFF0000";
+      $('#colorNotificationText')[0].value="0xFF0000";
     } else if($currentId == "6b") {
       $('#backgroundType')[0].value=5;
       $('#dateSize')[0].value=2;
       $('#colorTimeBackground')[0].value="0x00AA55";
       $('#colorTimeText')[0].value="0xFF0000";
-      $('#colorDateBackground')[0].value="0xFF0000";
-      $('#colorDateText')[0].value="0xFFFF00";
+      $('#colorNotificationText')[0].value="0xFFFF00";
     }
     
     
