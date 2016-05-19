@@ -99,61 +99,54 @@ $('.preset').click(function(e) {
   $('.preset').removeClass('current');
   $(this).addClass('current');
   if($currentId == "1a") {
-      $('#backgroundType')[0].value=3;
+      $('#backgroundType')[0].value=1;
       $('#colorTimeBackground')[0].value="0x000000";
-      $('#colorTimeText')[0].value="0xFFFFFF";
+      $('#colorTimeText')[0].value="0x000000";
       $('#colorNotificationText')[0].value="0xFFFFFF";
     } else if($currentId == "2a") {
-      $('#backgroundType')[0].value=3;
-      $('#colorTimeBackground')[0].value="0xFFFFFF";
+      $('#backgroundType')[0].value=2;
+      $('#colorTimeBackground')[0].value="0x000000";
       $('#colorTimeText')[0].value="0x000000";
       $('#colorNotificationText')[0].value="0xFFFFFF";
     } else if($currentId == "3a") {
-      $('#backgroundType')[0].value=5;
-      $('#colorTimeBackground')[0].value="0xFFFFFF";
-      $('#colorTimeText')[0].value="0x000000";
-      $('#colorNotificationText')[0].value="0x000000";
-    } else if($currentId == "4a") {
-      $('#backgroundType')[0].value=1;
+      $('#backgroundType')[0].value=3;
       $('#colorTimeBackground')[0].value="0x000000";
-      $('#colorTimeText')[0].value="0xFFFFFF";
+      $('#colorTimeText')[0].value="0x000000";
+      $('#colorNotificationText')[0].value="0xFFFFFF";
+    } else if($currentId == "4a") {
+      $('#backgroundType')[0].value=4;
+      $('#colorTimeBackground')[0].value="0x000000";
+      $('#colorTimeText')[0].value="0x000000";
       $('#colorNotificationText')[0].value="0xFFFFFF";
     } else if($currentId == "5a") {
-      $('#backgroundType')[0].value=1;
-      $('#colorTimeBackground')[0].value="0xFFFFFF";
-      $('#colorTimeText')[0].value="0x000000";
-      $('#colorNotificationText')[0].value="0x000000";
-    } else if($currentId == "1b") {
-      $('#backgroundType')[0].value=3;
+      $('#backgroundType')[0].value=0;
       $('#colorTimeBackground')[0].value="0x000000";
-      $('#colorTimeText')[0].value="0xFFFFFF";
+      $('#colorTimeText')[0].value="0x000000";
       $('#colorNotificationText')[0].value="0xFFFFFF";
+    } else if($currentId == "1b") {
+      $('#backgroundType')[0].value=1;
+      $('#colorTimeBackground')[0].value="0x000000";
+      $('#colorTimeText')[0].value="0x000000";
+      $('#colorNotificationText')[0].value="0xFF0000";
     } else if($currentId == "2b") {
-      $('#backgroundType')[0].value=3;
-      $('#colorTimeBackground')[0].value="0xFFFFFF";
-      $('#colorTimeText')[0].value="0x000055";
-      $('#colorNotificationText')[0].value="0xFFFFFF";
+      $('#backgroundType')[0].value=2;
+      $('#colorTimeBackground')[0].value="0x000000";
+      $('#colorTimeText')[0].value="0x555555";
+      $('#colorNotificationText')[0].value="0xFF0000";
     } else if($currentId == "3b") {
-      $('#backgroundType')[0].value=5;
-      $('#colorTimeBackground')[0].value="0xFFFFFF";
-      $('#colorTimeText')[0].value="0x00AAAA";
-      $('#colorNotificationText')[0].value="0x00AAAA";
-    } else if($currentId == "4b") {
-      $('#backgroundType')[0].value=5;
+      $('#backgroundType')[0].value=3;
       $('#colorTimeBackground')[0].value="0x00AAAA";
-      $('#colorTimeText')[0].value="0xFFFFFF";
+      $('#colorTimeText')[0].value="0x000000";
+      $('#colorNotificationText')[0].value="0xFFFFFF";
+    } else if($currentId == "4b") {
+      $('#backgroundType')[0].value=4;
+      $('#colorTimeBackground')[0].value="0x005500";
+      $('#colorTimeText')[0].value="0xAA0000";
       $('#colorNotificationText')[0].value="0xFFFFFF";
     } else if($currentId == "5b") {
-      $('#backgroundType')[0].value=1;
+      $('#backgroundType')[0].value=0;
       $('#colorTimeBackground')[0].value="0x000000";
       $('#colorTimeText')[0].value="0xFF0000";
-      $('#colorNotificationText')[0].value="0xFF0000";
-    } else if($currentId == "6b") {
-      $('#backgroundType')[0].value=5;
-      $('#colorTimeBackground')[0].value="0x00AA55";
-      $('#colorTimeText')[0].value="0xFF0000";
-      $('#colorNotificationText')[0].value="0xFFFF00";
+      $('#colorNotificationText')[0].value="0xFFFFFF";
     }
-    
-    
 });
