@@ -1,11 +1,10 @@
-#include <pebble.h>
 #include "settings.h"
 
 static Window *s_main_window;
-static TextLayer *s_date_layer, *s_battery_icon_layer, *s_bluetooth_icon_layer, *s_shake_layer;
+static TextLayer *s_battery_icon_layer, *s_bluetooth_icon_layer, *s_shaketime_layer, *s_shakedate_layer;
 static GFont s_icon_font;
-static GColor color_background, color_time_text, color_time_textlayer, color_date_text, color_date_textlayer, color_date_background;
-static BitmapLayer *date_background_layer, *s_background_layer;
+static GColor color_background, color_time_text, color_time_textlayer, color_notification_text;
+static BitmapLayer *s_background_layer;
 static BitmapLayer *s_canvas_layer;
 static GBitmap *s_background_bitmap;
 static uint32_t s_numbers_bitmap[10];
@@ -16,27 +15,28 @@ static char *croMonths[12];
 static char *croDays[7];
 AppTimer *timer;
 static int show_shake_delay = 6000;
+static bool show_shake = false;
 
+static void main_window_unload(Window *);
 static void init();
 //static void deinit();
 
 static void inbox_received_handler(DictionaryIterator *iter, void *context) {
-  Tuple *timeSize = dict_find(iter, AppKeyTimeSize);
-  Tuple *dateSize = dict_find(iter, AppKeyDateSize);
+  Tuple *timeSize = dict_find(iter, AppKeyBackgroundType);
+  Tuple *shakeWindow = dict_find(iter, AppKeyShakeWindow);
   Tuple *bluetoothAlarm = dict_find(iter, AppKeyBluetoothAlarm);
   Tuple *batteryIcon = dict_find(iter, AppKeyBatteryIcon);
   Tuple *dateFormat = dict_find(iter, AppKeyDateFormat);
   Tuple *croatianDate = dict_find(iter, AppKeyCroatianDate);
   Tuple *colorTimeBackground = dict_find(iter, AppKeyColorTimeBackground);
   Tuple *colorTimeText = dict_find(iter, AppKeyColorTimeText);
-  Tuple *colorDateBackground = dict_find(iter, AppKeyColorDateBackground);
-  Tuple *colorDateText = dict_find(iter, AppKeyColorDateText);
+  Tuple *colorNotificationText = dict_find(iter, AppKeyColorNotificationText);
 
   if (timeSize) {
-    persist_write_int(AppKeyTimeSize, timeSize->value->int32);
+    persist_write_int(AppKeyBackgroundType, timeSize->value->int32);
   }
-  if (dateSize) {
-    persist_write_int(AppKeyDateSize, dateSize->value->int32);
+  if (shakeWindow) {
+    persist_write_int(AppKeyShakeWindow, shakeWindow->value->int32);
   }
   if (bluetoothAlarm) {
     persist_write_int(AppKeyBluetoothAlarm, bluetoothAlarm->value->int32);
@@ -56,12 +56,10 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   if (colorTimeText) {
     persist_write_int(AppKeyColorTimeText, colorTimeText->value->int32);
   }
-  if (colorDateBackground) {
-    persist_write_int(AppKeyColorDateBackground, colorDateBackground->value->int32);
+  if (colorNotificationText) {
+    persist_write_int(AppKeyColorNotificationText, colorNotificationText->value->int32);
   }
-  if (colorDateText) {
-    persist_write_int(AppKeyColorDateText, colorDateText->value->int32);
-  }
+  main_window_unload(s_main_window);
   //deinit();
   init();
 }
@@ -97,29 +95,6 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   draw_number(ctx, number_point_UR, (int) (hour % 10));
   draw_number(ctx, number_point_DL, (int) (min / 10));
   draw_number(ctx, number_point_DR, (int) (min % 10));
-  
- if (settings[AppKeyDateSize]>0) {
-  // Copy date into buffer from tm structure
-  static char date_buffer[16];
-  if (settings[AppKeyCroatianDate] == 0) {
-    switch (settings[AppKeyDateFormat]) { //1 - 27 Apr, Wed, 2 - Apr 27, Wed, 3 - Wed, 27 Apr, 4 - Wed, Apr 27
-      case 2 : strftime(date_buffer, sizeof(date_buffer), "%b %d, %a", tick_time);break;
-      case 3 : strftime(date_buffer, sizeof(date_buffer), "%a, %d %b", tick_time);break;
-      case 4 : strftime(date_buffer, sizeof(date_buffer), "%a, %b %d", tick_time);break;
-      default : strftime(date_buffer, sizeof(date_buffer), "%d %b, %a", tick_time);
-    }
-  } else {
-    
-    switch (settings[AppKeyDateFormat]) { //1 - 27 Apr, Wed, 2 - Apr 27, Wed, 3 - Wed, 27 Apr, 4 - Wed, Apr 27
-      case 2 : snprintf(date_buffer, sizeof(date_buffer), "%s %d, %s", croMonths[tick_time->tm_mon], tick_time->tm_mday, croDays[tick_time->tm_wday]);break;
-      case 3 : snprintf(date_buffer, sizeof(date_buffer), "%s, %d %s", croDays[tick_time->tm_wday], tick_time->tm_mday, croMonths[tick_time->tm_mon]);break;
-      case 4 : snprintf(date_buffer, sizeof(date_buffer), "%s, %s %d", croDays[tick_time->tm_wday], croMonths[tick_time->tm_mon], tick_time->tm_mday);break;
-      default : snprintf(date_buffer, sizeof(date_buffer), "%d %s, %s", tick_time->tm_mday, croMonths[tick_time->tm_mon], croDays[tick_time->tm_wday]);
-    }
-  }
-  // Show the date
-  text_layer_set_text(s_date_layer, date_buffer);
- }
 }
 
 static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
@@ -164,35 +139,89 @@ static void battery_callback(BatteryChargeState state) {
 
 
 void timer_callback(void *data) {
-  text_layer_destroy(s_shake_layer);
+  //text_layer_destroy(s_shake_layer);
+  layer_set_hidden(text_layer_get_layer(s_shaketime_layer), true);
+  layer_set_hidden(text_layer_get_layer(s_shakedate_layer), true);
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+  show_shake=false;
 }
 
 static void update_time_shake () {
   time_t temp = time(NULL); 
   struct tm *tick_time = localtime(&temp);
+  
   // Write the current hours and minutes into a buffer
-  static char s_buffer[26];
-  strftime(s_buffer, sizeof(s_buffer), clock_is_24h_style() ? "%H:%M:%S\n\n%d %b\n%A" : "%I:%M:%S\n\n%d %b\n%A", tick_time);
+  static char s_buffer_date[30];
+  static char s_buffer_time[16];
+  strftime(s_buffer_time, sizeof(s_buffer_time), clock_is_24h_style() ? "%H:%M" : "%I:%M", tick_time);
+  
+  if (settings[AppKeyCroatianDate] == 1) { //croatian
+    if (settings[AppKeyShakeWindow] > 1) { //seconds
+      if (settings[AppKeyDateFormat] == 1) {
+        snprintf(s_buffer_date, sizeof(s_buffer_date), "\n%d\n\n%d %s\n%s", tick_time->tm_sec, tick_time->tm_mday, croMonths[tick_time->tm_mon], croDays[tick_time->tm_wday]);
+      } else {
+        snprintf(s_buffer_date, sizeof(s_buffer_date), "\n%d\n\n%s %d\n%s", tick_time->tm_sec, croMonths[tick_time->tm_mon], tick_time->tm_mday, croDays[tick_time->tm_wday]);
+      } 
+    } else { //no seconds
+      if (settings[AppKeyDateFormat] == 1) {
+        snprintf(s_buffer_date, sizeof(s_buffer_date), "\n\n\n%d %s\n%s", tick_time->tm_mday, croMonths[tick_time->tm_mon], croDays[tick_time->tm_wday]);
+      } else {
+        snprintf(s_buffer_date, sizeof(s_buffer_date), "\n\n\n%s %d\n%s", croMonths[tick_time->tm_mon], tick_time->tm_mday, croDays[tick_time->tm_wday]);
+      }
+    }
+  } else { //not croatian
+    if (settings[AppKeyShakeWindow] > 1) { //seconds
+      if (settings[AppKeyDateFormat] == 1) {
+        strftime(s_buffer_date, sizeof(s_buffer_date), clock_is_24h_style() ? "\n%S\n\n%d %B\n%A" : "\n%S\n\n%d %B\n%A", tick_time);
+      } else {
+        strftime(s_buffer_date, sizeof(s_buffer_date), clock_is_24h_style() ? "\n%S\n\n%B %d\n%A" : "\n%S\n\n%B %d\n%A", tick_time);
+      }
+    } else { //no seconds
+      if (settings[AppKeyDateFormat] == 1) {
+        strftime(s_buffer_date, sizeof(s_buffer_date), clock_is_24h_style() ? "\n\n\n%d %B\n%A" : "\n\n\n%d %B\n%A", tick_time);
+      } else {
+        strftime(s_buffer_date, sizeof(s_buffer_date), clock_is_24h_style() ? "\n\n\n%B %d\n%A" : "\n\n\n%B %d\n%A", tick_time);
+      }
+    }
+  }
   // Display this time on the TextLayer
-  text_layer_set_text(s_shake_layer, s_buffer+(('0' == s_buffer[0])?1:0));
+  text_layer_set_text(s_shaketime_layer, s_buffer_time+(('0' == s_buffer_time[0])?1:0));
+  text_layer_set_text(s_shakedate_layer, s_buffer_date);
 }
 
 static void tick_handler_shake(struct tm *tick_time, TimeUnits units_changed) {
   update_time_shake();
 }
 
+static void init_shake_window () {
+  s_shaketime_layer = text_layer_create(GRect(13, 13, 118, 142));
+  s_shakedate_layer = text_layer_create(GRect(13, 18, 118, 142));
+  layer_set_hidden(text_layer_get_layer(s_shaketime_layer), true);
+  layer_set_hidden(text_layer_get_layer(s_shakedate_layer), true);
+  text_layer_set_background_color(s_shaketime_layer, GColorWhite);
+  text_layer_set_background_color(s_shakedate_layer, GColorClear);
+  text_layer_set_text_color(s_shaketime_layer, GColorBlack);
+  text_layer_set_text_color(s_shakedate_layer, GColorBlack);
+  //text_layer_set_text(s_shake_layer, "\n00:00");
+  text_layer_set_text_alignment(s_shaketime_layer, GTextAlignmentCenter);
+  text_layer_set_text_alignment(s_shakedate_layer, GTextAlignmentCenter);
+  text_layer_set_font(s_shaketime_layer, fonts_get_system_font(FONT_KEY_LECO_32_BOLD_NUMBERS));
+  text_layer_set_font(s_shakedate_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+  layer_add_child(window_get_root_layer(s_main_window), text_layer_get_layer(s_shaketime_layer));
+  layer_add_child(window_get_root_layer(s_main_window), text_layer_get_layer(s_shakedate_layer));
+}
+
 static void draw_shake_window (AccelAxisType axis, int32_t direction) {
-  s_shake_layer = text_layer_create(GRect(24, 24, 96, 120));
-  text_layer_set_background_color(s_shake_layer, GColorWhite);
-  text_layer_set_text_color(s_shake_layer, GColorBlack);
-  text_layer_set_text(s_shake_layer, "\n00:00");
-  text_layer_set_text_alignment(s_shake_layer, GTextAlignmentCenter);
-  text_layer_set_font(s_shake_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28));
-  layer_add_child(window_get_root_layer(s_main_window), text_layer_get_layer(s_shake_layer));
-  update_time_shake();
-  tick_timer_service_subscribe(SECOND_UNIT, tick_handler_shake);
-  timer = app_timer_register(show_shake_delay, (AppTimerCallback)timer_callback, NULL);
+  if (show_shake==false) {
+    show_shake=true;
+    layer_set_hidden(text_layer_get_layer(s_shaketime_layer), false);
+    layer_set_hidden(text_layer_get_layer(s_shakedate_layer), false);
+    update_time_shake();
+    if (settings[AppKeyShakeWindow] > 1) {
+      tick_timer_service_subscribe(SECOND_UNIT, tick_handler_shake);
+    }
+    timer = app_timer_register(show_shake_delay, (AppTimerCallback)timer_callback, NULL);
+  }
 }
 
 
@@ -207,14 +236,14 @@ static void main_window_load(Window *window) {
 
 // background image
     // Create GBitmap
-  if (settings[AppKeyTimeSize]>0) {
-    if (settings[AppKeyTimeSize]==2) {
+  if (settings[AppKeyBackgroundType]>0) {
+    if (settings[AppKeyBackgroundType]==2) {
       s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_0);
-    } else if (settings[AppKeyTimeSize]==3) {
+    } else if (settings[AppKeyBackgroundType]==3) {
       s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_3);
-    } else if (settings[AppKeyTimeSize]==4) {
+    } else if (settings[AppKeyBackgroundType]==4) {
       s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_4);
-    } else if (settings[AppKeyTimeSize]==1) {
+    } else if (settings[AppKeyBackgroundType]==1) {
       s_background_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_1);
     }
     //create bitmap layer
@@ -233,35 +262,12 @@ static void main_window_load(Window *window) {
   //bitmap_layer_set_compositing_mode(s_canvas_layer, GCompOpSet);
 	layer_set_update_proc(bitmap_layer_get_layer(s_canvas_layer), canvas_update_proc);
 	layer_add_child(window_layer, bitmap_layer_get_layer(s_canvas_layer));
-
-  
-  if (settings[AppKeyDateSize]>0) {
-    date_background_layer = bitmap_layer_create(GRect(0, 144, 144, 24));
-    bitmap_layer_set_background_color(date_background_layer, color_date_background);
-    layer_add_child(window_layer, bitmap_layer_get_layer(date_background_layer));
-  // Create date TextLayer
-    if (settings[AppKeyDateSize]==1) {
-      s_date_layer = text_layer_create(GRect(0, bounds.size.h-24+2, 144, 16));
-      text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
-    } else if (settings[AppKeyDateSize]==2) {
-      s_date_layer = text_layer_create(GRect(0, bounds.size.h-24, 144, 20));
-      text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-    } else { //datesize==3
-      s_date_layer = text_layer_create(GRect(0, bounds.size.h-24-6, 144, 26));
-      text_layer_set_font(s_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
-    }
-      text_layer_set_text_color(s_date_layer, color_date_text);
-      text_layer_set_background_color(s_date_layer, color_date_textlayer);
-      text_layer_set_text_alignment(s_date_layer, GTextAlignmentCenter);
-      text_layer_set_text(s_date_layer, "1 May, Sun");
-      layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_date_layer));
-  }
   
   if (settings[AppKeyBluetoothAlarm]>0) {
     s_bluetooth_icon_layer = text_layer_create(GRect(3, 168-22, 16, 16+1));
     text_layer_set_font(s_bluetooth_icon_layer, s_icon_font);
-    text_layer_set_text_color(s_bluetooth_icon_layer, color_date_text);
-    text_layer_set_background_color(s_bluetooth_icon_layer, color_date_textlayer);
+    text_layer_set_text_color(s_bluetooth_icon_layer, color_notification_text);
+    text_layer_set_background_color(s_bluetooth_icon_layer, GColorClear);
     text_layer_set_text_alignment(s_bluetooth_icon_layer, GTextAlignmentCenter);
     text_layer_set_text(s_bluetooth_icon_layer, "A");
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_bluetooth_icon_layer));
@@ -273,8 +279,8 @@ static void main_window_load(Window *window) {
     //s_battery_icon_layer = text_layer_create(GRect(144-16-3, 0, 16, 16));
     s_battery_icon_layer = text_layer_create(GRect(144-16-3, 168-22, 16, 16+1));
     text_layer_set_font(s_battery_icon_layer, s_icon_font);
-    text_layer_set_text_color(s_battery_icon_layer, color_date_text);
-    text_layer_set_background_color(s_battery_icon_layer, color_date_textlayer);
+    text_layer_set_text_color(s_battery_icon_layer, color_notification_text);
+    text_layer_set_background_color(s_battery_icon_layer, GColorClear);
     text_layer_set_text_alignment(s_battery_icon_layer, GTextAlignmentCenter);
     layer_add_child(window_get_root_layer(window), text_layer_get_layer(s_battery_icon_layer));
     layer_set_hidden(text_layer_get_layer(s_battery_icon_layer), true);
@@ -283,32 +289,33 @@ static void main_window_load(Window *window) {
   
   if (settings[AppKeyCroatianDate] == 1) {
     //static char *croMonths[12];
-    croMonths[0] = "Sij"; croMonths[1] = "Vlj"; croMonths[2] = "Ožu"; croMonths[3] = "Tra"; croMonths[4] = "Svi"; croMonths[5] = "Lip";
-    croMonths[6] = "Srp"; croMonths[7] = "Kol"; croMonths[8] = "Ruj"; croMonths[9] = "Lis"; croMonths[10] = "Stu"; croMonths[11] = "Pro";
+    croMonths[0] = "Siječanj"; croMonths[1] = "Veljača"; croMonths[2] = "Ožujak"; croMonths[3] = "Travanj"; croMonths[4] = "Svibanj"; croMonths[5] = "Lipanj";
+    croMonths[6] = "Srpanj"; croMonths[7] = "Kolovoz"; croMonths[8] = "Rujan"; croMonths[9] = "Listopad"; croMonths[10] = "Studeni"; croMonths[11] = "Prosinac";
     //static char *croDays[7];
-    croDays[1] = "Pon"; croDays[2] = "Uto"; croDays[3] = "Sri"; croDays[4] = "Čet"; croDays[5] = "Pet"; croDays[6] = "Sub"; croDays[0] = "Ned";
+    croDays[1] = "Ponedjeljak"; croDays[2] = "Utorak"; croDays[3] = "Srijeda"; croDays[4] = "Četvrtak"; croDays[5] = "Petak"; croDays[6] = "Subota"; croDays[0] = "Nedjelja";
   
   }
+  
+  init_shake_window();
    
 }
 
 static void main_window_unload(Window *window) {
   APP_LOG(APP_LOG_LEVEL_INFO, "entered main_window_unload");
-  // Destroy TextLayers
-/*  text_layer_destroy(s_time_layer2);
-  text_layer_destroy(s_time_layer); */
-  text_layer_destroy(s_shake_layer);
+
+  text_layer_destroy(s_shaketime_layer);
+  text_layer_destroy(s_shakedate_layer);
   bitmap_layer_destroy(s_canvas_layer);
-  
-  if (settings[AppKeyDateSize]>0) {
-    text_layer_destroy(s_date_layer);
-  }
   
 // destroy background image
     // Destroy GBitmap
+  if (settings[AppKeyBackgroundType]>0) {
     gbitmap_destroy(s_background_bitmap);
+  }
     //Destroy BitmapLayer
+  if (settings[AppKeyBackgroundType]>0) {
     bitmap_layer_destroy(s_background_layer);
+  }
 
   if (settings[AppKeyBluetoothAlarm]>0 || settings[AppKeyBatteryIcon] > 0) {
     fonts_unload_custom_font(s_icon_font);
@@ -349,17 +356,7 @@ static void init() {
   color_background=GColorFromHEX(settings[AppKeyColorTimeBackground]);
   color_time_text=GColorFromHEX(settings[AppKeyColorTimeText]);
   color_time_textlayer=GColorClear;
-  color_date_text=GColorFromHEX(settings[AppKeyColorDateText]);
-  color_date_textlayer=GColorClear;
-  color_date_background=GColorFromHEX(settings[AppKeyColorDateBackground]);
-  
-  if (settings[AppKeyDateSize]>0) {
-    //time_position_offset_withdate=9;
-    //background_bitmap_alignment=GAlignTop;
-  } else {
-    //time_position_offset_withdate=0;
-    //background_bitmap_alignment=GAlignCenter;
-  }
+  color_notification_text=GColorFromHEX(settings[AppKeyColorNotificationText]);
   
     // Create main Window element and assign to pointer
   s_main_window = window_create();
@@ -399,13 +396,18 @@ static void init() {
   //app_message_open(app_message_inbox_size_maximum(), app_message_outbox_size_maximum());
   app_message_open(256, 256);
   
-  accel_tap_service_subscribe(draw_shake_window);
+  if (settings[AppKeyShakeWindow] > 0) {
+    accel_tap_service_subscribe(draw_shake_window);
+  }
 }
 
 static void deinit() {
   APP_LOG(APP_LOG_LEVEL_INFO, "entered deinit");
   app_timer_cancel(timer);
-	accel_tap_service_unsubscribe();
+  
+  if (settings[AppKeyShakeWindow] > 0) {
+	  accel_tap_service_unsubscribe();
+  }
 	tick_timer_service_unsubscribe();
   // Destroy Window
   window_destroy(s_main_window);

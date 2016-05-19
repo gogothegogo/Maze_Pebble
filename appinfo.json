@@ -1,15 +1,14 @@
 {
     "appKeys": {
+        "backgroundType": 0,
         "batteryIcon": 3,
         "bluetoothAlarm": 2,
-        "colorDateBackground": 8,
-        "colorDateText": 9,
+        "colorNotificationText": 8,
         "colorTimeBackground": 6,
         "colorTimeText": 7,
         "croatianDate": 5,
         "dateFormat": 4,
-        "dateSize": 1,
-        "timeSize": 0
+        "shakeWindow": 1
     },
     "capabilities": [
         "configurable"
