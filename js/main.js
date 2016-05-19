@@ -24,6 +24,7 @@ function loadOptions() {
   var $colorTimeBackground = $('#colorTimeBackground');
   var $colorTimeText = $('#colorTimeText');
   var $colorNotificationText = $('#colorNotificationText');
+  var $shakeTimeout = $('#shakeTimeout');
 
   if (localStorage.backgroundType) {
     $backgroundType[0].value = localStorage.backgroundType;
@@ -35,6 +36,7 @@ function loadOptions() {
     $colorTimeBackground[0].value = localStorage.colorTimeBackground;
     $colorTimeText[0].value = localStorage.colorTimeText;
     $colorNotificationText[0].value = localStorage.colorNotificationText;
+    $shakeTimeout[0].value = localStorage.shakeTimeout;
   }
 }
 
@@ -48,6 +50,7 @@ function getAndStoreConfigData() {
   var $colorTimeBackground = $('#colorTimeBackground');
   var $colorTimeText = $('#colorTimeText');
   var $colorNotificationText = $('#colorNotificationText');
+  var $shakeTimeout = $('#shakeTimeout');
   
   var options = {
     backgroundType: $backgroundType.val(),
@@ -58,7 +61,8 @@ function getAndStoreConfigData() {
     croatianDate: $croatianDate[0].checked ? 1:0,
     colorTimeBackground: $colorTimeBackground.val(),
     colorTimeText: $colorTimeText.val(),
-    colorNotificationText: $colorNotificationText.val()
+    colorNotificationText: $colorNotificationText.val(),
+    shakeTimeout: $shakeTimeout.val()
   };
 
   localStorage.backgroundType = options.backgroundType;
@@ -70,6 +74,7 @@ function getAndStoreConfigData() {
   localStorage.colorTimeBackground = options.colorTimeBackground;
   localStorage.colorTimeText = options.colorTimeText;
   localStorage.colorNotificationText = options.colorNotificationText;
+  localStorage.shakeTimeout = options.shakeTimeout;
 
   console.log('Got options: ' + JSON.stringify(options));
   return options;
