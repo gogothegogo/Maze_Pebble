@@ -14,7 +14,7 @@ static GAlign background_bitmap_alignment;
 static char *croMonths[12];
 static char *croDays[7];
 AppTimer *timer;
-static int show_shake_delay = 6000;
+static int show_shake_delay = 3000;
 static bool show_shake = false;
 
 static void main_window_unload(Window *);
@@ -31,6 +31,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   Tuple *colorTimeBackground = dict_find(iter, AppKeyColorTimeBackground);
   Tuple *colorTimeText = dict_find(iter, AppKeyColorTimeText);
   Tuple *colorNotificationText = dict_find(iter, AppKeyColorNotificationText);
+  Tuple *shakeTimeout = dict_find(iter, AppKeyShakeTimeout);
 
   if (timeSize) {
     persist_write_int(AppKeyBackgroundType, timeSize->value->int32);
@@ -59,6 +60,9 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   if (colorNotificationText) {
     persist_write_int(AppKeyColorNotificationText, colorNotificationText->value->int32);
   }
+  if (shakeTimeout) {
+    persist_write_int(AppKeyShakeTimeout, shakeTimeout->value->int32);
+  }
   main_window_unload(s_main_window);
   //deinit();
   init();
@@ -84,8 +88,8 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   // Get a tm structure
   time_t temp = time(NULL); 
   struct tm *tick_time = localtime(&temp);
-  int hour = tick_time->tm_hour;
-	int min = tick_time->tm_min;
+  int hour = (DEBUG==0) ? tick_time->tm_hour : 12;
+	int min = (DEBUG==0) ? tick_time->tm_min : 48;
   // Convert hours to 12 hours if the user prefers
 	if (clock_is_24h_style() == false && hour > 12) {
 		hour -= 12;
@@ -220,7 +224,8 @@ static void draw_shake_window (AccelAxisType axis, int32_t direction) {
     if (settings[AppKeyShakeWindow] > 1) {
       tick_timer_service_subscribe(SECOND_UNIT, tick_handler_shake);
     }
-    timer = app_timer_register(show_shake_delay, (AppTimerCallback)timer_callback, NULL);
+    APP_LOG(APP_LOG_LEVEL_INFO, "Shake Timeout calculated:%d ", settings[AppKeyShakeTimeout]*1000);
+    timer = app_timer_register(settings[AppKeyShakeTimeout]*1000, (AppTimerCallback)timer_callback, NULL);
   }
 }
 

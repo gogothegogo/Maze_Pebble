@@ -30,7 +30,8 @@ Pebble.addEventListener('webviewclosed', function(e) {
       croatianDate: parseInt(configData.croatianDate),
       colorTimeBackground: parseInt(configData.colorTimeBackground, 16),
       colorTimeText: parseInt(configData.colorTimeText, 16),
-      colorNotificationText: parseInt(configData.colorDateText, 16)
+      colorNotificationText: parseInt(configData.colorNotificationText, 16),
+      shakeTimeout: parseInt(configData.shakeTimeout)
     }, function() {
       console.log('Send successful!');
     }, function() {

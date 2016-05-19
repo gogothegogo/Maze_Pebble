@@ -8,6 +8,7 @@
         "colorTimeText": 7,
         "croatianDate": 5,
         "dateFormat": 4,
+        "shakeTimeout": 9,
         "shakeWindow": 1
     },
     "capabilities": [
@@ -15,7 +16,7 @@
     ],
     "companyName": "gogothegogo",
     "enableMultiJS": true,
-    "longName": "Maze",
+    "longName": "A Maze",
     "projectType": "native",
     "resources": {
         "media": [
@@ -120,12 +121,12 @@
         ]
     },
     "sdkVersion": "3",
-    "shortName": "Maze",
+    "shortName": "A Maze",
     "targetPlatforms": [
         "aplite",
         "basalt"
     ],
-    "uuid": "4c77e24e-cef6-4874-9e94-7f0b7e5bbcc7",
+    "uuid": "229f5b6f-d844-4bd3-8f67-c5766da0ad75",
     "versionLabel": "1.0",
     "watchapp": {
         "watchface": true
